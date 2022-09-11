@@ -100,6 +100,7 @@ struct aresta {
 };
 
 aresta find_best_edge(vector<vector<pair<int, int>>> grafo, Floresta &f, list<int> &arvore) {
+    pthread_t c, v;
     struct aresta best_edge(INFINITY);
 
     // para cada node na arvore
@@ -110,8 +111,28 @@ aresta find_best_edge(vector<vector<pair<int, int>>> grafo, Floresta &f, list<in
             int peso_node_vizinho = a.second;
 
             // apenas arestas que ligam a arvore a outra
+            void *rc = NULL, *rv = NULL;
+            Parameters *p1 = new Parameters(node, f);
+            Parameters *p2 = new Parameters(vizinho, f);
+            pthread_create(&c, NULL, &Floresta::Find_helper, p1);
+            pthread_create(&v, NULL, &Floresta::Find_helper, p2);
+            pthread_join(c, &rc);
+            pthread_join(v, &rv);
+            int *tn1 = (int *)rc;
+            int *tn2 = (int *)rv;
 
-            if (f.Find(vizinho) == f.Find(node)) continue;
+            if (*tn1 == *tn2) {
+                delete p1;
+                delete tn1;
+                delete p2;
+                delete tn2;
+                continue;
+            }
+
+            delete p1;
+            delete tn1;
+            delete p2;
+            delete tn2;
 
             if (best_edge.peso > peso_node_vizinho) {
                 best_edge = aresta(node, vizinho, peso_node_vizinho);
