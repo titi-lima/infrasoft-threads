@@ -5,7 +5,7 @@
 using std::cin;
 using std::cout;
 
-bool isLatin = true;
+bool isSquareLatin = true;
 int **matrix, N;
 
 void *checkColumns(void *ptr) {
@@ -14,7 +14,7 @@ void *checkColumns(void *ptr) {
             for (int k = j + 1; k < N; k++) {
                 cout << i << ' ' << j << ' ' << k << '\n';
                 if (matrix[i][j] == matrix[i][k]) {
-                    isLatin = false;
+                    isSquareLatin = false;
                     pthread_exit(NULL);
                 }
                 cout << "morreu\n";
@@ -29,7 +29,7 @@ void *checkRows(void *ptr) {
         for (int j = 0; j < N - 1; j++) {
             for (int k = j + 1; k < N; k++) {
                 if (matrix[j][i] == matrix[k][i]) {
-                    isLatin = false;
+                    isSquareLatin = false;
                     pthread_exit(NULL);
                 }
             }
@@ -58,10 +58,10 @@ int main() {
     pthread_join(c, NULL);
     pthread_join(r, NULL);
 
-    if (isLatin)
-        cout << "eh uma matriz latina\n";
+    if (isSquareLatin)
+        cout << "eh uma matriz quadrada latina\n";
     else
-        cout << "nao eh uma matriz latina\n";
+        cout << "nao eh uma matriz quadrada latina\n";
 
     for (int i = 0; i < N; i++) delete[] matrix[i];
     delete[] matrix;
