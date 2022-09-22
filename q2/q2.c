@@ -6,44 +6,36 @@
 
 int intersecao[5] = {0,0,0,0,0};
 
-pthread_mutex_t mutex;
-pthread_cond_t empty;
-pthread_cond_t fill;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;//indicar interseção vazia
 
-void put(int i, int num){
+//função q irá acrescentar 1 trem na interseção
+void inc(int i, int num){
     pthread_mutex_lock(&mutex);
-    while(intersecao[i] == 2) {
-        pthread_cond_wait(&empty, &mutex);
+    while(intersecao[i] == 2) {//se a interseção estiver cheia vai dormir na variavel de condição
+        pthread_cond_wait(&cond, &mutex);
     }
-    intersecao[i]++;
+    intersecao[i]++;//acrescenta o trem
     printf("thread %d entrou na intersecao %d. Tem %d trens aqui\n",num, i, intersecao[i]);
-    if (intersecao[i] == 1){
-        pthread_cond_broadcast(&fill);
-    }
     pthread_mutex_unlock(&mutex);
 }
 
-int get(int i, int num){
-    int result;
+//função q irá tirar um trem da interseção
+int dec(int i, int num){
     pthread_mutex_lock(&mutex);
-    while(intersecao[i] == 0){
-        pthread_cond_wait(&fill, &mutex);
-    }
-    intersecao[i]--;
+    intersecao[i]--;//retira o trem
     printf("thread %d saiu da interseção %d, restaram %d trens\n", num, i, intersecao[i]);
-    if (intersecao[i] == 1){
-        pthread_cond_broadcast(&empty);
-    }
+    pthread_cond_broadcast(&cond);
     pthread_mutex_unlock(&mutex);
 }
 
 void* rotina(void* arg){
-    int num = *(int*)arg;
+    int *num = (int*)arg;//se essa conversão acontecer depois de arg ter mudado
     int i = 0;
     for(i = 0; i < 5; i++){
-        put(i, num);
+        inc(i, *num);
         usleep(500000);
-        get(i, num);
+        dec(i, *num);
     }
     pthread_exit(NULL);
 }
@@ -51,16 +43,18 @@ void* rotina(void* arg){
 
 int main(){
     pthread_t trem[10];
-    int* num = (int*)malloc(sizeof(int)*10);
+    int* num = (int*)malloc(10*sizeof(int));
+    while(1){
+        for (int i = 0; i < 10; i++){
+            num[i] = i;
+            pthread_create(&trem[i], NULL, &rotina, (void*)&num[i]);
+            printf("a thread %d foi criada\n", i);
+        }
+        for (int i = 0; i < 10; i++){
+            pthread_join(trem[i], NULL);
+        }
+    }
 
-    for (int i = 0; i < 10; i++){
-        *num = i;
-        pthread_create(&trem[i], NULL, rotina, (void*)num);
-        printf("a thread %d foi criada\n", i);
-    }
-    for (int i = 0; i < 10; i++){
-        pthread_join(trem[i], NULL);
-    }
 
     return 0;
 }
