@@ -42,7 +42,9 @@ int main(){
     pthread_t thread[T];
 
     //criando as 10 threads
-    pthread_mutex_init(&mutex, NULL);
+    for(int i = 0; i < T; i++){
+        pthread_mutex_init(&mutex[i], NULL);
+    }
     for (int i = 0; i < T; i++){
         int *parte = malloc(sizeof(int));
         *parte = i * batch; //responsavel por definir qual posição do vetor cada thread começará a ler
@@ -52,7 +54,9 @@ int main(){
     for (int i = 0; i < T; i++){
         pthread_join(thread[i], NULL);
     }
-    pthread_mutex_destroy(&mutex);
+    for(int i = 0; i < T; i++){
+        pthread_mutex_destroy(&mutex[i]);
+    }
 
     //aqui embaixo esta printando o que foi pedido no enunciado
     float branco = candidatos[0];
